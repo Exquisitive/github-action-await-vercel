@@ -29,18 +29,18 @@ const awaitVercelDeployment = (baseUrl: string, timeout: number): Promise<Vercel
           }
         })
         .catch((error: string) => reject(error))) as VercelDeployment;
-      core.debug(`Received these data from Vercel: ${JSON.stringify(deployment)}`);
+      core.debug(`${new Date()}: Received these data from Vercel: ${JSON.stringify(deployment)}`);
 
       if (deployment.readyState === 'READY' || deployment.readyState === 'ERROR') {
-        core.debug('Deployment has been found');
+        core.debug(`${new Date()}: Deployment has been found`);
         return resolve(deployment);
       }
 
       await new Promise((resolve) => setTimeout(resolve, 5_000));
     }
-    core.debug(`Last deployment response: ${JSON.stringify(deployment)}`);
+    core.debug(`${new Date()}: Last deployment response: ${JSON.stringify(deployment)}`);
 
-    return reject('Timeout has been reached');
+    return reject(`${new Date()}: Timeout has been reached`);
   });
 };
 
