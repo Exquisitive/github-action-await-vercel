@@ -21,7 +21,13 @@ const awaitVercelDeployment = (baseUrl: string, timeout: number): Promise<Vercel
           Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
         },
       })
-        .then((data) => data.json())
+        .then((data) => {
+          if (!data) {
+            return {};
+          } else {
+            return data.json();
+          }
+        })
         .catch((error: string) => reject(error))) as VercelDeployment;
       core.debug(`Received these data from Vercel: ${JSON.stringify(deployment)}`);
 
@@ -29,6 +35,8 @@ const awaitVercelDeployment = (baseUrl: string, timeout: number): Promise<Vercel
         core.debug('Deployment has been found');
         return resolve(deployment);
       }
+
+      await new Promise((resolve) => setTimeout(resolve, 5_000));
     }
     core.debug(`Last deployment response: ${JSON.stringify(deployment)}`);
 
