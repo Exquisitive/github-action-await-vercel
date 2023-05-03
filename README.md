@@ -6,6 +6,11 @@
 ![GitHub Action build test](https://github.com/UnlyEd/github-action-await-vercel/workflows/GitHub%20Action%20build%20test/badge.svg)
 ![Update Code Climate test coverage](https://github.com/UnlyEd/github-action-await-vercel/workflows/Update%20Code%20Climate%20test%20coverage/badge.svg)
 
+# Updates
+
+When updating this GitHub Action, in order for changes to take effect when the action runs,
+you must run `yarn build:gha-runtime` (and maybe `yarn build:once`) and check in the changes.
+
 # GitHub Action - Await for a Vercel deployment (to be ready)
 
 ## Code snippet example (minimal example)
