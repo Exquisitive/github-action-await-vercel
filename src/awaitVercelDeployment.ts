@@ -12,34 +12,49 @@ import { VercelDeployment } from './types/VercelDeployment';
  */
 const awaitVercelDeployment = (baseUrl: string, timeout: number): Promise<VercelDeployment> => {
   return new Promise(async (resolve, reject) => {
-    let deployment: VercelDeployment = {};
     const timeoutTime = new Date().getTime() + timeout;
+    let numErrors = 0;
 
     while (new Date().getTime() < timeoutTime) {
-      deployment = (await fetch(`${VERCEL_BASE_API_ENDPOINT}/v11/now/deployments/get?url=${baseUrl}`, {
+      const data = (await fetch(`${VERCEL_BASE_API_ENDPOINT}/v11/now/deployments/get?url=${baseUrl}`, {
         headers: {
           Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
         },
       })
-        .then((data) => {
-          if (!data) {
-            return {};
+        .then((response) => {
+          if (response.ok) {
+            return response.json();
           } else {
-            return data.json();
+            core.debug(`${new Date()}: Error while fetching deployment status: ${response.statusText}`);
+            return undefined;
           }
         })
-        .catch((error: string) => reject(error))) as VercelDeployment;
-      core.debug(`${new Date()}: Received these data from Vercel: ${JSON.stringify(deployment)}`);
+        .catch((error: string) => {
+          core.debug(`${new Date()}: Error while fetching deployment status: ${error}`);
+          return undefined;
+        }));
+      core.debug(`${new Date()}: Received data from Vercel: ${JSON.stringify(data)}`);
 
-      if (deployment.readyState === 'READY' || deployment.readyState === 'ERROR') {
-        core.debug(`${new Date()}: Deployment has been found`);
-        return resolve(deployment);
+      if (data) {
+        numErrors = 0;
+        const deployment: VercelDeployment = data;
+        if (deployment.readyState === 'READY') {
+          core.debug(`${new Date()}: Deployment has been found`);
+          return resolve(deployment);
+        } else if (deployment.readyState === 'ERROR') {
+          return reject(`${new Date()}: Deployment failed`);
+        }
+      } else {
+        numErrors++;
+        if (numErrors > 1) {
+          return reject(`${new Date()}: Fetching deployment status failed`);
+        } else {
+          core.debug(`${new Date()}: Fetching deployment status failed, retrying...`);
+        }
       }
 
       await new Promise((resolve) => setTimeout(resolve, 5_000));
     }
-    core.debug(`${new Date()}: Last deployment response: ${JSON.stringify(deployment)}`);
-
     return reject(`${new Date()}: Timeout has been reached`);
   });
 };
