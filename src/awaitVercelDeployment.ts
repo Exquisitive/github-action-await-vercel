@@ -16,7 +16,7 @@ const awaitVercelDeployment = (baseUrl: string, timeout: number): Promise<Vercel
     let numErrors = 0;
 
     while (new Date().getTime() < timeoutTime) {
-      const data = (await fetch(`${VERCEL_BASE_API_ENDPOINT}/v11/now/deployments/get?url=${baseUrl}`, {
+      const data = (await fetch(`${VERCEL_BASE_API_ENDPOINT}/v13/deployments/${baseUrl}`, {
         headers: {
           Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
         },
