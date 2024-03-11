@@ -27,13 +27,13 @@ const run = (): void => {
   }
 
   try {
-    const urlToWait: string = core.getInput('deployment-url');
-    core.debug(`Url to wait for: ${urlToWait}`); // debug is only output if you set the secret `ACTIONS_RUNNER_DEBUG` to true https://github.com/actions/toolkit/blob/master/docs/action-debugging.md#how-to-access-step-debug-logs
+    const urlsToWait: string[] = core.getInput('deployment-url').split(',').map((url) => url.trim());
+    core.debug(`Urls to wait for: ${urlsToWait}`); // debug is only output if you set the secret `ACTIONS_RUNNER_DEBUG` to true https://github.com/actions/toolkit/blob/master/docs/action-debugging.md#how-to-access-step-debug-logs
 
     const timeout: number = (+core.getInput('timeout') || DEFAULT_TIMEOUT) * 1000;
     core.debug(`Timeout used: ${timeout}`);
 
-    awaitVercelDeployment(urlToWait, timeout)
+    awaitVercelDeployment(urlsToWait, timeout)
       .then((deployment: VercelDeployment) => {
         core.setOutput('deploymentDetails', deployment);
       })

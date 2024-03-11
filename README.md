@@ -9,7 +9,7 @@
 # Updates
 
 When updating this GitHub Action, in order for changes to take effect when the action runs,
-you must run `yarn build:gha-runtime` (and maybe `yarn build:once`) and check in the changes.
+you must run `yarn build:once` and `yarn build:gha-runtime` and check in the changes.
 
 # GitHub Action - Await for a Vercel deployment (to be ready)
 
@@ -38,6 +38,9 @@ _See the [Examples section](#examples) for more advanced examples._
 It waits until a Vercel deployment domain is marked as "READY". _(See [`readyState === 'READY'`](https://vercel.com/docs/api#endpoints/deployments/create-a-new-deployment/response-parameters))_
 
 You must know the domain url you want to await for and provide it as `deployment-url` input.
+
+Multiple URLs can be provided in a comma-separated list, in which case the first one to be ready will be returned.
+
 
 ## Why/when should you use it?
 If you're using Vercel to deploy your apps, and you use some custom deployment pipeline using GitHub Actions, 
