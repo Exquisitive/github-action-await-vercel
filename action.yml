@@ -5,7 +5,7 @@ branding:
   color: black
 inputs:
   deployment-url:
-    description: 'Url you want to wait for'
+    description: 'Url(s) you want to wait for (comma separated)'
     required: true
   timeout:
     description: 'Custom timeout value (default: "10" (seconds))'
