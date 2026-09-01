@@ -13,8 +13,6 @@
 
 name: 'Verify action (manual)'
 on:
-  push:
-    branches: [ 'chore/node24-runtime' ] # TEMPORARY: workflow_dispatch only works once this file is on the default branch.
   workflow_dispatch:
     inputs:
       deployment-url:
