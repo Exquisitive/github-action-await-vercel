@@ -1,8 +1,9 @@
 # Summary:
-# Test if the GitHub Action builds correctly.
-# Makes sure the GitHub Action builds when being built by GitHub Actions.
+# Test if the GitHub Action builds correctly, and that the committed runtime bundle is up to date.
 #
-# See https://github.com/actions/checkout https://github.com/actions/checkout/releases/tag/v3
+# The runner executes the *committed* `github-action-runtime/index.js`, not `src/`, so a bundle that
+# has drifted from the sources silently ships stale behaviour. This workflow rebuilds it and fails
+# if the result differs from what is checked in.
 
 name: 'GitHub Action build test'
 on:
@@ -13,10 +14,34 @@ jobs:
   run-build-test:
     strategy:
       matrix:
-        version: [ 20 ]
-    runs-on: ubuntu-22.04
+        version: [ 24 ]
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - run: |
-          yarn
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.version }}
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build (tsc + ncc)
+        run: |
           yarn build:once
+          yarn build:gha-runtime
+
+      - name: Fail if the committed runtime bundle is stale
+        run: |
+          if ! git diff --exit-code -- lib github-action-runtime; then
+            echo '::error::The committed build output is out of date. Run "yarn build:once && yarn build:gha-runtime" and commit lib/ and github-action-runtime/.'
+            exit 1
+          fi
+
+      - name: Fail if the bundle pulls in the deprecated punycode core module
+        run: |
+          if grep -q 'require("punycode")' github-action-runtime/index.js; then
+            echo '::error::github-action-runtime/index.js requires the deprecated "punycode" core module, which makes Node.js emit DEP0040 at runtime.'
+            exit 1
+          fi
+          echo 'OK: no punycode reference in the bundle.'

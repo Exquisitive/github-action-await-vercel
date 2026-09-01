@@ -1,15 +1,27 @@
 <a href="https://unly.org"><img src="https://storage.googleapis.com/unly/images/ICON_UNLY.png" align="right" height="20" alt="Unly logo" title="Unly logo" /></a>
-[![Maintainability](https://api.codeclimate.com/v1/badges/c0cb5c0cecadfb391a1a/maintainability)](https://codeclimate.com/github/UnlyEd/github-action-await-vercel/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/c0cb5c0cecadfb391a1a/test_coverage)](https://codeclimate.com/github/UnlyEd/github-action-await-vercel/test_coverage)
+![GitHub Action build test](https://github.com/Exquisitive/github-action-await-vercel/actions/workflows/check-build.yml/badge.svg)
 
-![GitHub Action integration test](https://github.com/UnlyEd/github-action-await-vercel/workflows/GitHub%20Action%20integration%20test/badge.svg)
-![GitHub Action build test](https://github.com/UnlyEd/github-action-await-vercel/workflows/GitHub%20Action%20build%20test/badge.svg)
-![Update Code Climate test coverage](https://github.com/UnlyEd/github-action-await-vercel/workflows/Update%20Code%20Climate%20test%20coverage/badge.svg)
+> This is Exquisitive's fork of [`UnlyEd/github-action-await-vercel`](https://github.com/UnlyEd/github-action-await-vercel).
+
+# Requirements
+
+This action runs on the **Node.js 24** Actions runtime (`runs.using: node24`).
+
+- GitHub-hosted runners support it out of the box.
+- **Self-hosted runners need Actions Runner `v2.327.1` or newer.** Older runners cannot resolve the
+  `node24` runtime and will fail the step. See the
+  [Node 20 deprecation notice](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/).
 
 # Updates
 
 When updating this GitHub Action, in order for changes to take effect when the action runs,
-you must run `yarn build:once` and `yarn build:gha-runtime` and check in the changes.
+you must run `yarn build:once` and `yarn build:gha-runtime` (or `yarn build:all`) and **check in the
+changes to both `lib/` and `github-action-runtime/`**.
+
+The runner executes the committed `github-action-runtime/index.js`, *not* `src/`, so an un-rebuilt
+bundle ships stale behaviour without any error. The
+[`check-build`](.github/workflows/check-build.yml) workflow rebuilds on every push and fails if the
+committed output has drifted.
 
 # GitHub Action - Await for a Vercel deployment (to be ready)
 
@@ -20,7 +32,7 @@ jobs:
   wait-for-vercel-deployment:
     runs-on: ubuntu-22.04
     steps:
-      - uses: UnlyEd/github-action-await-vercel@v1 # TODO best practices recommend to use a fixed version instead of @v1 for production usage (i.e: @v1.2.32)
+      - uses: Exquisitive/github-action-await-vercel@v1.0.0 # Pin a release tag, never @main
         id: await-vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -77,7 +89,7 @@ You should declare those variables as **[GitHub Secrets](https://docs.github.com
 
 Name | Description
 --- | ---
-`VERCEL_TOKEN` | Your [vercel token](https://vercel.com/account/tokens) is required to fetch the Vercel API on your behalf and get the status of your deployment. [See usage in code](https://github.com/UnlyEd/github-action-await-vercel/search?q=VERCEL_TOKEN)
+`VERCEL_TOKEN` | Your [vercel token](https://vercel.com/account/tokens) is required to fetch the Vercel API on your behalf and get the status of your deployment. [See usage in code](https://github.com/Exquisitive/github-action-await-vercel/search?q=VERCEL_TOKEN)
 
 > _**N.B**: You don't have to use a GitHub Secret to provide the `VERCEL_TOKEN`. But you should do so, as it's a good security practice, because this way the token will be [hidden in the logs (encrypted)](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets)._ 
 
@@ -108,7 +120,7 @@ In the below example, we show you how to:
 
 1. **Step 1**: Forward `VERCEL_DEPLOYMENT_URL` as an ENV variable, using ` >> $GITHUB_ENV"` which stores the value into the GitHub Actions env vars.
     Of course, you might do it differently. It doesn't really matter as long as `VERCEL_DEPLOYMENT_URL` is set.
-1. **Step 2**: Then, we use the `UnlyEd/github-action-await-vercel@v1` GitHub Action, which waits for the deployment url to be ready.
+1. **Step 2**: Then, we use the `Exquisitive/github-action-await-vercel@v1.0.0` GitHub Action, which waits for the deployment url to be ready.
 1. **Step 3**: Finally, we show an example on how to read the deployment's information returned by the Vercel API (which have been forwarded).
 
 ```yaml
@@ -125,7 +137,7 @@ jobs:
       - name: Retrieve deployment URL (example on how to set an ENV var)
         run: "echo VERCEL_DEPLOYMENT_URL=nextjs-bzyss249z.vercel.app >> $GITHUB_ENV"
 
-      - uses: UnlyEd/github-action-await-vercel@v1 # TODO best practices recommend to use a fixed version instead of @v1 for production usage (i.e: @v1.2.32)
+      - uses: Exquisitive/github-action-await-vercel@v1.0.0 # Pin a release tag, never @main
         id: await-vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
