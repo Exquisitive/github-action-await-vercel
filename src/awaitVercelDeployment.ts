@@ -1,10 +1,13 @@
 import * as core from '@actions/core';
-import fetch from 'node-fetch';
 import { VERCEL_BASE_API_ENDPOINT } from './config';
 import { VercelDeployment } from './types/VercelDeployment';
 
 /**
  * Awaits for the Vercel deployment to be in a "ready" state.
+ *
+ * XXX Uses the global `fetch` (available since Node.js 18), rather than a userland HTTP client.
+ *  This keeps the bundled runtime free of `whatwg-url`/`tr46`, which pull in the deprecated
+ *  `punycode` core module and make Node.js emit DEP0040 at runtime.
  *
  * @param baseUrls Base urls of the Vercel deployments to await for.
  * @param timeout Duration (in seconds) until we'll await for.
@@ -18,23 +21,23 @@ const awaitVercelDeployment = (baseUrls: string[], timeout: number): Promise<Ver
     while (new Date().getTime() < timeoutTime) {
       for (const baseUrl of baseUrls) {
         core.debug(`${new Date()}: Fetching deployment status for ${baseUrl}`);
-        const data = (await fetch(`${VERCEL_BASE_API_ENDPOINT}/v13/deployments/${baseUrl}`, {
+        const data: VercelDeployment | undefined = await fetch(`${VERCEL_BASE_API_ENDPOINT}/v13/deployments/${baseUrl}`, {
           headers: {
             Authorization: `Bearer ${process.env.VERCEL_TOKEN}`,
           },
         })
-          .then((response) => {
+          .then(async (response) => {
             if (response.ok) {
-              return response.json();
+              return (await response.json()) as VercelDeployment;
             } else {
               core.debug(`${new Date()}: Error while fetching deployment status: ${response.statusText}`);
               return undefined;
             }
           })
-          .catch((error: string) => {
+          .catch((error) => {
             core.debug(`${new Date()}: Error while fetching deployment status: ${error}`);
             return undefined;
-          }));
+          });
         core.debug(`${new Date()}: Received data from Vercel: ${JSON.stringify(data)}`);
 
         if (data) {

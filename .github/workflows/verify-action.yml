@@ -1,0 +1,62 @@
+# Summary:
+# Manually exercise this action, as a consumer would, against the code in this checkout.
+#
+# The action is awkward to test from its consumers (Trailblazer's only live consumer runs on push
+# to `main`), so this harness runs it here instead.
+#
+# Without a `VERCEL_TOKEN` secret the action stops at its own configuration check. That is still a
+# useful result: reaching that check proves the runner resolved the `node24` runtime and executed
+# the committed bundle. Check the run's annotations afterwards — neither the Node 20 deprecation
+# notice nor a `punycode` DEP0040 warning should appear.
+#
+# Add a `VERCEL_TOKEN` repository secret to exercise the full path against a real deployment.
+
+name: 'Verify action (manual)'
+on:
+  workflow_dispatch:
+    inputs:
+      deployment-url:
+        description: 'Vercel deployment domain to await (comma separated for several)'
+        required: true
+        default: 'exquisitive-trailblazer.vercel.app'
+      timeout:
+        description: 'Seconds to wait before giving up'
+        required: false
+        default: '20'
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Run the action from this checkout
+        id: await
+        continue-on-error: true # A failure here is still evidence: the bundle ran.
+        uses: ./
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        with:
+          deployment-url: ${{ inputs.deployment-url }}
+          timeout: ${{ inputs.timeout }}
+
+      - name: Report what happened
+        run: |
+          {
+            echo '## Verify action'
+            echo
+            echo "- Runtime declared by \`action.yml\`: \`$(grep -oP "using: '\K[^']+" action.yml)\`"
+            echo "- Runner version: \`${{ runner.name }}\` on \`${{ runner.os }}\`"
+            echo "- Step outcome: \`${{ steps.await.outcome }}\`"
+            echo "- \`VERCEL_TOKEN\` secret present: \`${{ secrets.VERCEL_TOKEN != '' }}\`"
+            echo
+            if [ -n "${{ steps.await.outputs.deploymentDetails }}" ]; then
+              echo '- Deployment reached `READY`; the action returned `deploymentDetails`.'
+            else
+              echo '- No `deploymentDetails` returned. With no token this is expected.'
+            fi
+            echo
+            echo 'The step above ran, so the runner resolved the `node24` runtime and executed'
+            echo '`github-action-runtime/index.js`. Check this run'"'"'s annotations: there should be no'
+            echo 'Node 20 deprecation notice naming this action, and no `punycode` DEP0040 warning.'
+          } >> "$GITHUB_STEP_SUMMARY"

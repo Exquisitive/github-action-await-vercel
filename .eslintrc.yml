@@ -74,8 +74,8 @@ rules: # See https://eslint.org/docs/rules
     - vars: 'all' # We don't want unused variables (noise) - XXX Note that this will be a duplicate of "no-unused-vars" rule
       args: 'none' # Sometimes it's useful to have unused arguments for later use, such as describing what args are available (DX)
       ignoreRestSiblings: true # Sometimes it's useful to have unused props for later use, such as describing what props are available (DX)
-  '@typescript-eslint/ban-types':
+  # XXX `@typescript-eslint/ban-types` was removed in typescript-eslint v8 and split into narrower
+  #  rules. `no-empty-object-type` is the successor that covers what we cared about here.
+  '@typescript-eslint/no-empty-object-type':
     - error
-    - extendDefaults: true
-      types:
-        '{}': false # Allow writing `type Props = {}` - See https://github.com/typescript-eslint/typescript-eslint/issues/2063#issuecomment-632833366
+    - allowObjectTypes: 'always' # Allow writing `type Props = {}` - See https://github.com/typescript-eslint/typescript-eslint/issues/2063#issuecomment-632833366

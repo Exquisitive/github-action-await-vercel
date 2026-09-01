@@ -2,9 +2,9 @@
 //  So, the order must be from the most important to the less important
 //  See https://github.com/motdotla/dotenv/issues/256#issuecomment-598676663
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-require('dotenv').config({ path: '.env.test.local' });
+require('dotenv').config({ path: '.env.test.local', quiet: true });
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-require('dotenv').config({ path: '.env.test' });
+require('dotenv').config({ path: '.env.test', quiet: true });
 
 // Backup of the native console object for later re-use
 global._console = global.console;
